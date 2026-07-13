@@ -8,6 +8,9 @@ const app = express();
 app.use(cors());
 app.use(express.json()); // Allows our server to read JSON sent by the mobile app
 
+// Serve your HTML/Tailwind web panel automatically from the public folder
+app.use(express.static('public')); 
+
 // ==========================================
 // MODULE 1: GET LIVE MATERIAL RATES
 // ==========================================
@@ -57,7 +60,6 @@ app.post('/api/attendance/clockin', async (req, res) => {
 // ==========================================
 app.post('/api/invoices/new', async (req, res) => {
     const { user_id, customer_name, customer_phone, items } = req.body;
-    // 'items' should be an array: [{ material_id: 1, gross_weight: 50, tare_weight: 10, rate_applied: 650 }]
 
     try {
         // 1. Calculate Grand Total directly from database values to avoid client tampering
@@ -95,15 +97,6 @@ app.post('/api/invoices/new', async (req, res) => {
     }
 });
 
-// Start the server
-//const PORT = process.env.PORT || 5000;
-//app.listen(PORT, () => {
-//    console.log(`Scrap Business Backend Engine running smoothly on port ${PORT}`);
-// Change this line at the bottom of your server.js
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Scrap Business Backend Engine running globally on port ${PORT}`);
-});
 // ==========================================
 // SECURITY: SECURE USER LOGIN API
 // ==========================================
@@ -120,8 +113,6 @@ app.post('/api/auth/login', async (req, res) => {
         const user = users[0];
 
         // 2. Compare the typed password with the encrypted hash inside MySQL
-        // Note: For existing sample data like 'hashed_secure_password_123', use plain comparison, 
-        // but for real production users you use bcrypt.compareSync(password, user.password_hash)
         const isMatch = (password === user.password_hash) || bcrypt.compareSync(password, user.password_hash);
         
         if (!isMatch) {
@@ -131,8 +122,8 @@ app.post('/api/auth/login', async (req, res) => {
         // 3. Create a secure digital token containing basic profile data
         const token = jwt.sign(
             { user_id: user.user_id, role: user.role, name: user.full_name },
-            process.env.JWT_SECRET,
-            { expiresIn: '30d' } // Worker remains logged in for 30 days
+            process.env.JWT_SECRET || 'fallback_development_key',
+            { expiresIn: '30d' }
         );
 
         res.json({
@@ -149,4 +140,12 @@ app.post('/api/auth/login', async (req, res) => {
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
+});
+
+// ==========================================
+// START EXPRESS SERVER (ALWAYS KEEP AT VERY BOTTOM)
+// ==========================================
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Scrap Business Backend Engine running globally on port ${PORT}`);
 });
