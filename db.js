@@ -1,25 +1,28 @@
 const mysql = require('mysql2');
 require('dotenv').config();
 
-// Reformat port cleanly to ensure it is passed as a pure number to mysql2
-const dbPort = process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306;
+// Prioritize Railway system variables, fall back to .env values for local dev
+const dbHost = process.env.MYSQLHOST || process.env.DB_HOST;
+const dbUser = process.env.MYSQLUSER || process.env.DB_USER;
+const dbPassword = process.env.MYSQLPASSWORD || process.env.DB_PASS;
+const dbDatabase = process.env.MYSQLDATABASE || process.env.DB_NAME;
+const rawPort = process.env.MYSQLPORT || process.env.DB_PORT;
+const dbPort = rawPort ? parseInt(rawPort, 10) : 3306;
 
 const pool = mysql.createPool({
-    host: process.env.DB_HOST,
+    host: dbHost,
     port: dbPort,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    database: process.env.DB_NAME,
+    user: dbUser,
+    password: dbPassword,
+    database: dbDatabase,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0,
-    connectTimeout: 10000 // Prevents the app from hanging forever if DB is slow to respond
+    connectTimeout: 10000 
 });
 
-// Export the promise-based wrapper
 const promisePool = pool.promise();
 
-// Test the connection immediately on startup to catch explicit errors in the logs
 promisePool.getConnection()
     .then(connection => {
         console.log('🚀 Database connected successfully to Railway MySQL instance!');
