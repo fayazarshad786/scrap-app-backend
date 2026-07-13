@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scrap Yard Enterprise</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <style>
+        body {
+            background-color: #121212;
+            color: #E0E0E0;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen pb-12">
+
+    <!-- Header Navigation Bar -->
+    <header class="bg-[#1E1E1E] border-b border-zinc-800 sticky top-0 z-50 px-4 py-3 flex justify-between items-center shadow-md">
+        <div class="flex items-center space-x-2">
+            <span class="text-emerald-500 font-bold text-xl tracking-wider">SY</span>
+            <h1 class="font-semibold text-lg text-white tracking-wide">ScrapYard Pro</h1>
+        </div>
+        <div class="flex items-center space-x-3">
+            <span class="bg-zinc-800 text-xs px-2 py-1 rounded-md text-emerald-400 font-mono">Live Network</span>
+        </div>
+    </header>
+
+    <main class="max-w-md mx-auto px-4 mt-6 space-y-6">
+
+        <!-- SECTION 1: ATTENDANCE & SHIFT MANAGEMENT -->
+        <section class="bg-[#1E1E1E] border border-zinc-800 rounded-xl p-5 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-white font-medium text-base tracking-wide">Staff Attendance Gate</h2>
+                <span class="text-zinc-500 text-xs">Geo-Fenced</span>
+            </div>
+            <p class="text-xs text-zinc-400 mb-4 leading-relaxed">Ensure you are standing within the scrap yard boundaries before clocking into your shift.</p>
+            <button id="clockInBtn" onclick="handleClockIn()" class="w-full bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white font-medium py-2.5 rounded-lg transition-colors shadow-sm text-sm tracking-wide cursor-pointer">
+                Verify Location & Clock In
+            </button>
+            <div id="attendanceStatus" class="mt-3 text-xs hidden text-center font-medium"></div>
+        </section>
+
+        <!-- SECTION 2: LIVE BILLING ENGINE -->
+        <section class="bg-[#1E1E1E] border border-zinc-800 rounded-xl p-5 shadow-sm space-y-4">
+            <div class="border-b border-zinc-800 pb-3">
+                <h2 class="text-white font-medium text-base tracking-wide">Create Dynamic Purchase Ticket</h2>
+            </div>
+
+            <!-- Customer Meta Info -->
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1">Customer Name</label>
+                    <input type="text" id="custName" placeholder="e.g. Walking Supplier" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1">Phone Number</label>
+                    <input type="tel" id="custPhone" placeholder="e.g. +91 9876543210" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors">
+                </div>
+            </div>
+
+            <hr class="border-zinc-800 my-4">
+
+            <!-- Weight Calculation Block -->
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1">Select Scrap Material</label>
+                    <select id="materialSelect" onchange="updateLiveRate()" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors">
+                        <!-- Loaded dynamically from production MySQL -->
+                        <option value="">Loading material registry...</option>
+                    </select>
+                </div>
+
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1">Gross Weight (kg)</label>
+                        <input type="number" id="grossWeight" oninput="calculateLiveTotal()" placeholder="0.00" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-zinc-400 uppercase tracking-wider mb-1">Tare Weight (kg)</label>
+                        <input type="number" id="tareWeight" oninput="calculateLiveTotal()" placeholder="0.00" class="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500 transition-colors">
+                    </div>
+                </div>
+
+                <!-- Calculations Display Box -->
+                <div class="bg-zinc-900 rounded-xl p-4 border border-zinc-800 space-y-2">
+                    <div class="flex justify-between text-xs text-zinc-400">
+                        <span>Current Rate Applied:</span>
+                        <span id="rateLabel" class="font-mono text-zinc-200">₹0.00 / kg</span>
+                    </div>
+                    <div class="flex justify-between text-xs text-zinc-400">
+                        <span>Net Accountable Weight:</span>
+                        <span id="netWeightLabel" class="font-mono text-zinc-200">0.00 kg</span>
+                    </div>
+                    <div class="flex justify-between items-center pt-2 border-t border-zinc-800">
+                        <span class="text-sm font-medium text-white">Estimated Payout:</span>
+                        <span id="grandTotalLabel" class="text-xl font-bold font-mono text-emerald-400">₹0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invoice Action Button -->
+            <button onclick="submitInvoice()" class="w-full bg-zinc-800 hover:bg-zinc-700 text-white font-medium py-3 rounded-lg border border-zinc-700 transition-colors text-sm tracking-wide mt-2 cursor-pointer">
+                Compile & Save Production Invoice
+            </button>
+            <div id="invoiceStatus" class="mt-2 text-xs text-center font-medium hidden"></div>
+        </section>
+    </main>
+
+    <!-- INTERACTIVE SCRIPT LOGIC -->
+    <script>
+        // Global caching values for selected rates
+        let currentMaterials = [];
+        let selectedRate = 0;
+
+        // Fetch live inventory rates from your active database when the page initializes
+        async function fetchMaterials() {
+            try {
+                const response = await fetch('/api/materials');
+                const result = await response.json();
+                
+                if (result.success && result.data) {
+                    currentMaterials = result.data;
+                    const selectMenu = document.getElementById('materialSelect');
+                    selectMenu.innerHTML = '<option value="">-- Choose Material --</option>';
+                    
+                    result.data.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.material_id;
+                        option.textContent = `${item.material_name} (₹${item.rate_per_kg}/kg)`;
+                        selectMenu.appendChild(option);
+                    });
+                }
+            } catch (error) {
+                console.error("Error loading registry items:", error);
+                document.getElementById('materialSelect').innerHTML = '<option value="">Error connecting to API</option>';
+            }
+        }
+
+        function updateLiveRate() {
+            const selectId = document.getElementById('materialSelect').value;
+            const item = currentMaterials.find(m => m.material_id == selectId);
+            selectedRate = item ? parseFloat(item.rate_per_kg) : 0;
+            document.getElementById('rateLabel').textContent = `₹${selectedRate.toFixed(2)} / kg`;
+            calculateLiveTotal();
+        }
+
+        function calculateLiveTotal() {
+            const gross = parseFloat(document.getElementById('grossWeight').value) || 0;
+            const tare = parseFloat(document.getElementById('tareWeight').value) || 0;
+            
+            const netWeight = Math.max(0, gross - tare);
+            const payout = netWeight * selectedRate;
+            
+            document.getElementById('netWeightLabel').textContent = `${netWeight.toFixed(2)} kg`;
+            document.getElementById('grandTotalLabel').textContent = `₹${payout.toFixed(2)}`;
+        }
+
+        // Attendance Form Submissions (Includes Mock GPS extraction browser logic)
+        function handleClockIn() {
+            const statusEl = document.getElementById('attendanceStatus');
+            statusEl.className = "mt-3 text-xs text-center font-medium text-amber-400 block";
+            statusEl.textContent = "Querying device satellite tracking...";
+
+            if (!navigator.geolocation) {
+                statusEl.className = "mt-3 text-xs text-center font-medium text-red-400 block";
+                statusEl.textContent = "GPS locating not supported by your mobile device.";
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(async (position) => {
+                try {
+                    const response = await fetch('/api/attendance/clockin', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: 2, // Maps to default production seed account
+                            latitude: position.coords.latitude,
+                            longitude: position.coords.longitude
+                        })
+                    });
+                    const resData = await response.json();
+                    
+                    if(resData.success) {
+                        statusEl.className = "mt-3 text-xs text-center font-medium text-emerald-400 block";
+                        statusEl.textContent = resData.message;
+                    } else {
+                        statusEl.className = "mt-3 text-xs text-center font-medium text-red-400 block";
+                        statusEl.textContent = resData.message || "Geo-Fenced denial.";
+                    }
+                } catch (err) {
+                    statusEl.className = "mt-3 text-xs text-center font-medium text-red-400 block";
+                    statusEl.textContent = "Failed connecting to database.";
+                }
+            }, () => {
+                // If location permission is blocked, send default coordinates inside yard limits to allow testing
+                statusEl.className = "mt-3 text-xs text-center font-medium text-amber-400 block";
+                statusEl.textContent = "GPS permission rejected. Forcing yard mock tracking coordinates...";
+                
+                setTimeout(async () => {
+                    const response = await fetch('/api/attendance/clockin', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ user_id: 2, latitude: 21.426700, longitude: 39.826200 })
+                    });
+                    const resData = await response.json();
+                    statusEl.className = "mt-3 text-xs text-center font-medium text-emerald-400 block";
+                    statusEl.textContent = resData.message + " (Mock Coordinates Enabled)";
+                }, 1000);
+            });
+        }
+
+        // Compile and submit active purchase invoice lines down to cloud storage
+        async function submitInvoice() {
+            const statusEl = document.getElementById('invoiceStatus');
+            const matId = document.getElementById('materialSelect').value;
+            const gross = parseFloat(document.getElementById('grossWeight').value) || 0;
+            const tare = parseFloat(document.getElementById('tareWeight').value) || 0;
+            const cName = document.getElementById('custName').value || "General Customer";
+            const cPhone = document.getElementById('custPhone').value || "N/A";
+
+            if(!matId || gross <= 0) {
+                statusEl.className = "mt-2 text-xs text-center font-medium text-red-400 block";
+                statusEl.textContent = "Validation Failure: Please pick a material and valid gross balance.";
+                return;
+            }
+
+            statusEl.className = "mt-2 text-xs text-center font-medium text-zinc-400 block";
+            statusEl.textContent = "Uploading ticket details...";
+
+            try {
+                const response = await fetch('/api/invoices/new', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: 2,
+                        customer_name: cName,
+                        customer_phone: cPhone,
+                        items: [{
+                            material_id: parseInt(matId),
+                            gross_weight: gross,
+                            tare_weight: tare,
+                            rate_applied: selectedRate
+                        }]
+                    })
+                });
+
+                const resData = await response.json();
+                if(resData.success) {
+                    statusEl.className = "mt-2 text-xs text-center font-medium text-emerald-400 block";
+                    statusEl.textContent = `Success! Invoice ID #${resData.invoice_id} saved to cloud database.`;
+                    
+                    // Reset calculation values
+                    document.getElementById('grossWeight').value = '';
+                    document.getElementById('tareWeight').value = '';
+                    calculateLiveTotal();
+                } else {
+                    statusEl.className = "mt-2 text-xs text-center font-medium text-red-400 block";
+                    statusEl.textContent = `Server Error: ${resData.error}`;
+                }
+            } catch (err) {
+                statusEl.className = "mt-2 text-xs text-center font-medium text-red-400 block";
+                statusEl.textContent = "Failed sending invoice data to cloud.";
+            }
+        }
+
+        // Boot system registries
+        window.onload = fetchMaterials;
+    </script>
+</body>
+</html>
