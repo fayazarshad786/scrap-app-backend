@@ -1,15 +1,23 @@
-const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const express = require('express');
 const cors = require('cors');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const path = require('path');
 const db = require('./db');
 
 const app = express();
+
+// Global Middlewares
 app.use(cors());
 app.use(express.json()); // Allows our server to read JSON sent by the mobile app
 
-// Serve your HTML/Tailwind web panel automatically from the public folder
-app.use(express.static('public')); 
+// Absolute path configuration to serve static files from the public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Root Health Check Route to test connectivity
+app.get('/', (req, res) => {
+    res.send('🚀 Scrap Yard API Gateway is Online and Healthy!');
+});
 
 // ==========================================
 // MODULE 1: GET LIVE MATERIAL RATES
@@ -29,7 +37,7 @@ app.get('/api/materials', async (req, res) => {
 app.post('/api/attendance/clockin', async (req, res) => {
     const { user_id, latitude, longitude } = req.body;
 
-    // Define your physical scrap yard boundaries (Example coordinates)
+    // Physical scrap yard boundaries (Example coordinates)
     const yardLat = 21.426700;
     const yardLng = 39.826200;
 
@@ -143,9 +151,9 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // ==========================================
-// START EXPRESS SERVER (ALWAYS KEEP AT VERY BOTTOM)
+// START EXPRESS SERVER (DYNAMIC PRODUCTION ENVIRONMENT BINDINGS)
 // ==========================================
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Scrap Business Backend Engine running globally on port ${PORT}`);
 });
