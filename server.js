@@ -38,8 +38,8 @@ app.post('/api/attendance/clockin', async (req, res) => {
     const { user_id, latitude, longitude } = req.body;
 
     // Physical scrap yard boundaries (Example coordinates)
-    const yardLat = 21.426700;
-    const yardLng = 39.826200;
+    const yardLat = 16.520479;
+    const yardLng = 80.615637;
 
     // Simple geometric distance check (Roughly within ~150 meters)
     const latDiff = Math.abs(latitude - yardLat);

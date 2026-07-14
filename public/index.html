@@ -166,6 +166,7 @@
     </main>
 
     <!-- Custom Script To Handle Geolocation and UI Fixes -->
+    <!-- Custom Script To Handle Geolocation and Live Backend API Routing -->
     <script>
         document.getElementById('clockInBtn').addEventListener('click', () => {
             const geoStatus = document.getElementById('geoStatus');
@@ -173,11 +174,38 @@
             
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const lat = position.coords.latitude.toFixed(6);
-                        const lng = position.coords.longitude.toFixed(6);
-                        geoStatus.className = "text-xs font-mono text-emerald-400 font-medium flex items-center justify-center gap-2";
-                        geoStatus.innerHTML = `📡 Lock Acquired: ${lat}, ${lng}`;
+                    async (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        
+                        geoStatus.className = "text-xs font-mono text-amber-400 font-medium flex items-center justify-center gap-2";
+                        geoStatus.innerHTML = `📡 Transmitting Lock: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
+                        try {
+                            // Hit your live endpoint
+                            const response = await fetch('/api/attendance/clockin', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    user_id: 1, // Temporary user ID for testing until auth context flows here
+                                    latitude: lat,
+                                    longitude: lng
+                                })
+                            });
+
+                            const result = await response.json();
+
+                            if (result.success) {
+                                geoStatus.className = "text-xs font-mono text-emerald-400 font-medium flex items-center justify-center gap-2";
+                                geoStatus.innerHTML = `✅ Clock-In Logged! ID: ${result.attendance_id}`;
+                            } else {
+                                geoStatus.className = "text-xs font-mono text-rose-400 font-medium flex items-center justify-center gap-2";
+                                geoStatus.innerHTML = `❌ ${result.message}`;
+                            }
+                        } catch (apiError) {
+                            geoStatus.className = "text-xs font-mono text-rose-400 font-medium flex items-center justify-center gap-2";
+                            geoStatus.innerHTML = `⚠️ Network Route Connection Failed`;
+                        }
                     },
                     (error) => {
                         geoStatus.className = "text-xs font-mono text-rose-400 font-medium flex items-center justify-center gap-2";
