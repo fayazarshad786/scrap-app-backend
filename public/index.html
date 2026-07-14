@@ -182,12 +182,11 @@
                         geoStatus.innerHTML = `📡 Transmitting Lock: ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
 
                         try {
-                            // Hit your live endpoint
                             const response = await fetch('/api/attendance/clockin', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
                                 body: JSON.stringify({
-                                    user_id: 1, // Temporary user ID for testing until auth context flows here
+                                    user_id: 1, 
                                     latitude: lat,
                                     longitude: lng
                                 })
@@ -199,8 +198,10 @@
                                 geoStatus.className = "text-xs font-mono text-emerald-400 font-medium flex items-center justify-center gap-2";
                                 geoStatus.innerHTML = `✅ Clock-In Logged! ID: ${result.attendance_id}`;
                             } else {
+                                // FIX: Fallback to result.error if result.message is missing
+                                const errorMsg = result.message || result.error || "Unknown Server Error";
                                 geoStatus.className = "text-xs font-mono text-rose-400 font-medium flex items-center justify-center gap-2";
-                                geoStatus.innerHTML = `❌ ${result.message}`;
+                                geoStatus.innerHTML = `❌ ${errorMsg}`;
                             }
                         } catch (apiError) {
                             geoStatus.className = "text-xs font-mono text-rose-400 font-medium flex items-center justify-center gap-2";
